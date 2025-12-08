@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR + Face Attendance</title>
+
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 2. Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- 3. Lucide Icons (via React UMD) -->
+    <script src="https://unpkg.com/lucide-react@0.395.0/dist/lucide-react.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- 4. JS Libraries for QR & Face Rec -->
+    <!-- face-api.js for facial recognition -->
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <!-- jsQR for scanning QR codes -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1/dist/jsQR.min.js"></script>
+    <!-- qrcode.js for generating QR codes -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1/build/qrcode.min.js"></script>
+
+    <!-- 5. Custom Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+
+    <!-- Loading Modal (for models) -->
+    <div id="loading-modal" class="fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-50 hidden">
+        <div class="loader"></div>
+        <p class="text-white text-lg mt-4">Loading AI Models...</p>
+    </div>
+
+    <!-- Landing Page -->
+    <div id="landing-page" class="min-h-screen relative overflow-hidden flex items-center justify-center">
+        <!-- Animated Background -->
+        <div class="absolute inset-0 bg-gray-900">
+            <div
+                class="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')] bg-cover bg-center opacity-20">
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/90 via-purple-900/90 to-black/90"></div>
+
+            <!-- Floating Orbs -->
+            <div class="absolute -top-40 -right-40 w-96 h-96 bg-indigo-500/30 rounded-full blur-3xl animate-pulse">
+            </div>
+            <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500/30 rounded-full blur-3xl animate-pulse"
+                style="animation-delay: 1s;"></div>
+        </div>
+
+        <div class="relative z-10 max-w-5xl mx-auto px-6 py-12 text-center text-white">
+            <div class="mb-8 inline-block animate-fade-in">
+                <div class="p-4 rounded-2xl glass inline-flex items-center justify-center mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="text-indigo-400">
+                        <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                        <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                        <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                        <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                        <path d="M8 11s-1 2-3 2" />
+                        <path d="M16 11s1 2 3 2" />
+                        <path d="M9 17h6" />
+                        <path d="M9 8a3 3 0 0 1 6 0" />
+                        <path d="M12 11v2" />
+                    </svg>
+                </div>
+                <h1 class="text-6xl md:text-7xl font-bold mb-6 tracking-tight">
+                    Attendance <span
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Pro</span>
+                </h1>
+            </div>
+
+            <p class="text-xl md:text-2xl mb-12 text-gray-300 max-w-2xl mx-auto leading-relaxed animate-fade-in"
+                style="animation-delay: 0.2s;">
+                Experience the future of attendance tracking with our secure, AI-powered facial recognition system.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in"
+                style="animation-delay: 0.4s;">
+                <button onclick="showLoginPage()"
+                    class="btn-premium px-8 py-4 rounded-xl font-bold text-lg min-w-[200px]">
+                    Get Started
+                </button>
+                <button onclick="showLoginPage()"
+                    class="px-8 py-4 glass rounded-xl text-white font-semibold hover:bg-white/10 transition-all duration-300 min-w-[200px] border border-white/10">
+                    Login
+                </button>
+            </div>
+
+            <!-- Features -->
+            <div class="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 text-left animate-fade-in"
+                style="animation-delay: 0.6s;">
+                <div
+                    class="glass p-8 rounded-2xl hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-2">
+                    <div
+                        class="w-12 h-12 bg-indigo-500/20 rounded-lg flex items-center justify-center mb-6 text-indigo-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="18" height="18" x="3" y="3" rx="2" />
+                            <path d="M7 7h.01" />
+                            <path d="M17 7h.01" />
+                            <path d="M7 17h.01" />
+                            <path d="M17 17h.01" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white">QR Scanning</h3>
+                    <p class="text-gray-400 leading-relaxed">Instant attendance marking with secure, unique QR codes for
+                        every member.</p>
+                </div>
+                <div
+                    class="glass p-8 rounded-2xl hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-2">
+                    <div
+                        class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-6 text-purple-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                            <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                            <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                            <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                            <path d="M8 11s-1 2-3 2" />
+                            <path d="M16 11s1 2 3 2" />
+                            <path d="M9 17h6" />
+                            <path d="M9 8a3 3 0 0 1 6 0" />
+                            <path d="M12 11v2" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white">Face Recognition</h3>
+                    <p class="text-gray-400 leading-relaxed">Advanced AI verification ensures 100% accurate identity
+                        confirmation.</p>
+                </div>
+                <div
+                    class="glass p-8 rounded-2xl hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-2">
+                    <div
+                        class="w-12 h-12 bg-pink-500/20 rounded-lg flex items-center justify-center mb-6 text-pink-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18" />
+                            <path d="M18 17V9" />
+                            <path d="M13 17V5" />
+                            <path d="M8 17v-3" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white">Real-time Analytics</h3>
+                    <p class="text-gray-400 leading-relaxed">Comprehensive reports and live dashboards to track
+                        attendance trends.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Page -->
+    <div id="login-page" class="min-h-screen relative overflow-hidden flex items-center justify-center hidden">
+        <!-- Background -->
+        <div class="absolute inset-0 bg-gray-900">
+            <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-indigo-950 to-black"></div>
+            <div
+                class="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2029&auto=format&fit=crop')] bg-cover bg-center opacity-10">
+            </div>
+        </div>
+
+        <div class="relative z-10 w-full max-w-md mx-auto px-6">
+            <div class="glass p-8 rounded-2xl shadow-2xl animate-fade-in">
+                <div class="text-center mb-8">
+                    <div
+                        class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-indigo-500/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="text-white">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                            <polyline points="10 17 15 12 10 7" />
+                            <line x1="15" x2="3" y1="12" y2="12" />
+                        </svg>
+                    </div>
+                    <h2 class="text-3xl font-bold text-white mb-2">Welcome Back</h2>
+                    <p class="text-gray-400">Sign in to access your dashboard</p>
+                </div>
+
+
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-6">
+                    <div>
+                        <label for="login-username"
+                            class="block text-sm font-medium text-gray-200 mb-2">Username</label>
+                        <input type="text" id="login-username" required
+                            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                            placeholder="Enter your username">
+                    </div>
+
+                    <div>
+                        <label for="login-password"
+                            class="block text-sm font-medium text-gray-200 mb-2">Password</label>
+                        <div class="relative">
+                            <input type="password" id="login-password" required
+                                class="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                placeholder="Enter your password">
+                            <button type="button" id="toggle-password"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white transition-colors focus:outline-none"
+                                aria-label="Toggle password visibility">
+                                <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye">
+                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off hidden">
+                                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                                    <path
+                                        d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                                    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                                    <line x1="2" x2="22" y1="2" y2="22" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="remember-me"
+                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            <span class="ml-2 text-sm text-gray-300">Remember me</span>
+                        </label>
+                        <button type="button" id="forgot-password-link"
+                            class="text-sm text-indigo-300 hover:text-indigo-200 focus:outline-none">
+                            Forgot password?
+                        </button>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center">
+                    <button onclick="showLandingPage()"
+                        class="text-sm text-gray-300 hover:text-white transition-colors">
+                        ← Back to Home
+                    </button>
+                </div>
+
+                <div id="login-error"
+                    class="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm text-center hidden">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgot-password-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Forgot Password</h2>
+                <button id="close-forgot-password-modal"
+                    class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                Enter your username and we'll remind you of the default password for this demo.
+            </p>
+            <form id="forgot-password-form" class="space-y-4">
+                <div>
+                    <label for="forgot-username"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Username</label>
+                    <input type="text" id="forgot-username"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-700 text-gray-900 dark:text-gray-100"
+                        placeholder="Enter your username" required>
+                </div>
+                <div id="forgot-password-message" class="hidden"></div>
+                <div class="flex flex-col sm:flex-row gap-2 pt-2">
+                    <button type="submit"
+                        class="flex-1 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-all">
+                        Send Reminder
+                    </button>
+                    <button type="button"
+                        class="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition-all"
+                        onclick="closeForgotPasswordModal()">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Photo Preview Modal -->
+    <div id="photo-preview-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+        <div
+            class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Photo Preview</h2>
+                <button id="close-photo-preview-modal"
+                    class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="text-center">
+                <img id="photo-preview" src="" alt="Photo preview"
+                    class="w-full max-w-lg mx-auto rounded-lg border border-gray-300 dark:border-gray-600 shadow-lg">
+                <p class="mt-4 text-sm text-gray-600 dark:text-gray-400">Please review the photo before enrolling</p>
+                <button id="close-photo-preview-btn"
+                    class="mt-4 px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-all">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div id="qr-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4 text-center">
+            <div
+                class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Enrollment Successful!</h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-6">This is your unique QR code. Please save it.</p>
+
+            <div class="bg-white p-4 rounded-xl shadow-inner inline-block mb-6 border border-gray-200">
+                <canvas id="qr-canvas"></canvas>
+            </div>
+
+            <button id="close-qr-modal-btn"
+                class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all shadow-lg">
+                Close & Continue
+            </button>
+        </div>
+    </div>
+
+    <!-- Main App Layout -->
+    <div id="app-layout"
+        class="hidden flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden transition-colors duration-300">
+        <!-- Sidebar -->
+        <aside id="sidebar"
+            class="w-64 sidebar-gradient text-white flex flex-col shadow-2xl z-20 transition-all duration-300">
+            <div class="p-6 flex items-center gap-3 border-b border-white/10">
+                <div
+                    class="w-8 h-8 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-lg flex items-center justify-center shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="text-white">
+                        <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                        <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                        <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                        <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                        <path d="M8 11s-1 2-3 2" />
+                        <path d="M16 11s1 2 3 2" />
+                        <path d="M9 17h6" />
+                        <path d="M9 8a3 3 0 0 1 6 0" />
+                        <path d="M12 11v2" />
+                    </svg>
+                </div>
+                <span class="text-xl font-bold tracking-tight">Attendance Pro</span>
+            </div>
+
+            <ul class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <li>
+                    <a href="#"
+                        class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white"
+                        data-page="dashboard-page">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-layout-dashboard">
+                            <rect width="7" height="9" x="3" y="3" rx="1" />
+                            <rect width="7" height="5" x="14" y="3" rx="1" />
+                            <rect width="7" height="9" x="14" y="12" rx="1" />
+                            <rect width="7" height="5" x="3" y="16" rx="1" />
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10"
+                        data-page="enrollment-page">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-user-check">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <polyline points="16 11 18 13 22 9" />
+                        </svg>
+                        <span>Enrollment</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10"
+                        data-page="members-page">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-users">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                        <span>Members</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10"
+                        data-page="mark-attendance-page">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-scan-face">
+                            <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                            <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                            <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                            <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                            <path d="M8 11s-1 2-3 2" />
+                            <path d="M16 11s1 2 3 2" />
+                            <path d="M9 17h6" />
+                            <path d="M9 8a3 3 0 0 1 6 0" />
+                            <path d="M12 11v2" />
+                        </svg>
+                        <span>Mark Attendance</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10"
+                        data-page="events-page">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-calendar">
+                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                            <line x1="16" x2="16" y1="2" y2="6" />
+                            <line x1="8" x2="8" y1="2" y2="6" />
+                            <line x1="3" x2="21" y1="10" y2="10" />
+                        </svg>
+                        <span>Events</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10"
+                        data-page="reports-page">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-bar-chart-3">
+                            <path d="M3 3v18h18" />
+                            <path d="M18 17V9" />
+                            <path d="M13 17V5" />
+                            <path d="M8 17v-3" />
+                        </svg>
+                        <span>Reports</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="p-4 border-t border-white/10">
+                <a href="#"
+                    class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-lg bg-red-600 hover:bg-red-700 transition-all duration-200"
+                    onclick="handleLogout(); return false;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-log-out">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" x2="9" y1="12" y2="12" />
+                    </svg>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-900/50 backdrop-blur-sm">
+            <!-- Header -->
+            <header
+                class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 px-8 py-4 flex justify-between items-center">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Overview
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="theme-toggle-btn"
+                        class="p-2 rounded-full theme-btn-light dark:theme-btn-dark transition-all duration-300">
+                        <!-- Sun Icon -->
+                        <svg id="theme-toggle-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                                fill-rule="evenodd" clip-rule="evenodd"></path>
+                        </svg>
+                        <!-- Moon Icon -->
+                        <svg id="theme-toggle-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                        </svg>
+                    </button>
+                    <div
+                        class="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg">
+                        A
+                    </div>
+                </div>
+            </header>
+
+            <div class="p-8 max-w-7xl mx-auto">
+
+                <!-- Page: Dashboard -->
+                <div id="dashboard-page" class="page-content">
+                    <div class="flex justify-between items-center mb-8">
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Dashboard</h1>
+                        <div class="flex items-center gap-4">
+                            <div class="relative">
+                                <select id="dashboard-event-select"
+                                    class="appearance-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-2 pl-4 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm transition-all duration-200 hover:border-indigo-400">
+                                    <option value="">All Events (Today)</option>
+                                </select>
+                                <div
+                                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Total Members -->
+                        <div class="stat-card group">
+                            <div class="stat-card-header">
+                                <div class="stat-icon stat-icon-indigo">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M3 12a9 9 0 1 0 9-9" />
+                                        <path d="M12 3v9l5 3" />
+                                    </svg>
+                                </div>
+                                <span class="stat-label">Total Members</span>
+                            </div>
+                            <div class="stat-value" id="total-members-count">0</div>
+                            <span class="stat-subtext">Registered users</span>
+                        </div>
+
+                        <!-- Present Today -->
+                        <div class="stat-card group">
+                            <div class="stat-card-header">
+                                <div class="stat-icon stat-icon-green">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="m9 11 3 3L22 4" />
+                                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                                    </svg>
+                                </div>
+                                <span class="stat-label">Present Today</span>
+                            </div>
+                            <div class="stat-value" id="present-count">0</div>
+                            <span class="stat-subtext">Checked in</span>
+                        </div>
+
+                        <!-- Absent Today -->
+                        <div class="stat-card group">
+                            <div class="stat-card-header">
+                                <div class="stat-icon stat-icon-red">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <path d="m4.93 4.93 14.14 14.14" />
+                                    </svg>
+                                </div>
+                                <span class="stat-label">Absent Today</span>
+                            </div>
+                            <div class="stat-value" id="absent-count">0</div>
+                            <span class="stat-subtext">Not checked in</span>
+                        </div>
+
+                        <!-- Late Today -->
+                        <div class="stat-card group">
+                            <div class="stat-card-header">
+                                <div class="stat-icon stat-icon-red">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <polyline points="12 6 12 12 16 14" />
+                                    </svg>
+                                </div>
+                                <span class="stat-label">Late Today</span>
+                            </div>
+                            <div class="stat-value" id="late-count">0</div>
+                            <span class="stat-subtext">Arrived after time</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page: Enrollment -->
+                <div id="enrollment-page" class="page-content">
+                    <div class="max-w-2xl mx-auto">
+                        <div class="glass-panel rounded-2xl p-8 shadow-2xl border border-gray-200 dark:border-gray-700">
+                            <h1
+                                class="text-3xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">
+                                User Enrollment</h1>
+
+                            <div class="space-y-6">
+                                <div>
+                                    <label for="id-number"
+                                        class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">ID
+                                        Number</label>
+                                    <input type="text" id="id-number" maxlength="9"
+                                        class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                        placeholder="e.g., 1234-5678" pattern="[0-9]{4}-[0-9]{4}">
+                                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Format: XXXX-XXXX (4
+                                        digits, dash, 4 digits)</p>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="first-name"
+                                            class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">First
+                                            Name</label>
+                                        <input type="text" id="first-name"
+                                            class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                            placeholder="John">
+                                    </div>
+                                    <div>
+                                        <label for="last-name"
+                                            class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Last
+                                            Name</label>
+                                        <input type="text" id="last-name"
+                                            class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                            placeholder="Doe">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="role"
+                                        class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Role</label>
+                                    <select id="role"
+                                        class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                        <option value="student">Student</option>
+                                        <option value="employee">Employee</option>
+                                        <option value="visitor">Visitor</option>
+                                    </select>
+                                </div>
+
+                                <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                                    <label class="block text-sm font-medium mb-4 text-gray-700 dark:text-gray-300">Face
+                                        Registration</label>
+
+                                    <!-- Camera Container -->
+                                    <div
+                                        class="relative rounded-2xl overflow-hidden bg-black aspect-video mb-4 shadow-lg group">
+                                        <video id="enroll-video" autoplay muted
+                                            class="w-full h-full object-cover"></video>
+                                        <canvas id="photo-canvas"
+                                            class="absolute inset-0 w-full h-full hidden"></canvas>
+
+                                        <!-- Overlay -->
+                                        <div
+                                            class="absolute inset-0 border-2 border-dashed border-white/30 rounded-2xl pointer-events-none">
+                                        </div>
+                                        <div
+                                            class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <div class="w-48 h-64 border-2 border-indigo-500/50 rounded-full"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-4">
+                                        <button id="capture-btn"
+                                            class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-indigo-500/30 flex items-center justify-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <path
+                                                    d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                                <circle cx="12" cy="13" r="4" />
+                                            </svg>
+                                            Capture Photo
+                                        </button>
+                                        <button id="retake-btn"
+                                            class="hidden flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                                                <path d="M3 3v5h5" />
+                                            </svg>
+                                            Retake
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="photo-upload"
+                                        class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Or
+                                        Upload Photo</label>
+                                    <input type="file" id="photo-upload" accept="image/*"
+                                        class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-300 transition-all">
+                                </div>
+
+                                <button id="enroll-btn"
+                                    class="w-full btn-premium py-4 rounded-xl font-bold text-lg shadow-xl mt-6">
+                                    Complete Enrollment
+                                </button>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+
+                <!-- Page: Members -->
+                <div id="members-page" class="page-content">
+                    <div class="flex justify-between items-center mb-8">
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Enrolled Members
+                        </h1>
+                        <button onclick="showPage('enrollment-page')"
+                            class="btn-premium px-6 py-3 rounded-xl font-semibold flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <line x1="20" x2="20" y1="8" y2="14" />
+                                <line x1="23" x2="17" y1="11" y2="11" />
+                            </svg>
+                            Add Member
+                        </button>
+                    </div>
+                    <div id="members-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Member cards will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Page: Mark Attendance -->
+                <div id="mark-attendance-page" class="page-content">
+                    <div class="max-w-2xl mx-auto">
+                        <h1
+                            class="text-3xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">
+                            Mark Attendance</h1>
+
+                        <div class="glass-panel rounded-2xl p-8 shadow-2xl border border-gray-200 dark:border-gray-700">
+                            <!-- Controls -->
+                            <div class="mb-6 space-y-4">
+                                <div>
+                                    <label for="event-select"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select
+                                        Event</label>
+                                    <div class="relative">
+                                        <select id="event-select"
+                                            class="w-full appearance-none px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                            <option value="">No Event (General Attendance)</option>
+                                        </select>
+                                        <div
+                                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 20 20">
+                                                <path
+                                                    d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attendance
+                                        Type</label>
+                                    <div class="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                                        <button id="type-time-in"
+                                            class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400">Time
+                                            In</button>
+                                        <button id="type-time-out"
+                                            class="flex-1 py-2 px-4 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-all">Time
+                                            Out</button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="camera-select"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select
+                                        Camera</label>
+                                    <select id="camera-select"
+                                        class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                        <option value="">Loading cameras...</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- QR Scanning View -->
+                            <div id="qr-scanning-view">
+                                <div
+                                    class="relative rounded-2xl overflow-hidden bg-black aspect-square shadow-lg mb-6 group">
+                                    <video id="scan-video" autoplay muted playsinline
+                                        class="w-full h-full object-cover"></video>
+                                    <div class="absolute inset-0 border-2 border-white/10 pointer-events-none"></div>
+                                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                        <div class="w-64 h-64 border-2 border-indigo-500/50 rounded-2xl relative">
+                                            <div
+                                                class="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-indigo-500 rounded-tl-lg">
+                                            </div>
+                                            <div
+                                                class="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-indigo-500 rounded-tr-lg">
+                                            </div>
+                                            <div
+                                                class="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-indigo-500 rounded-bl-lg">
+                                            </div>
+                                            <div
+                                                class="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-indigo-500 rounded-br-lg">
+                                            </div>
+                                            <div
+                                                class="absolute top-0 left-0 w-full h-1 bg-indigo-500/80 shadow-[0_0_15px_rgba(99,102,241,0.8)] animate-scan">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="status-box"
+                                    class="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-center text-gray-600 dark:text-gray-300 mb-4">
+                                    Please select a camera...
+                                </div>
+                                <button id="start-camera-btn" onclick="startCameraStream()"
+                                    class="w-full btn-premium py-3 rounded-xl font-bold shadow-lg">
+                                    Start Camera
+                                </button>
+                                <canvas id="scan-canvas" class="hidden"></canvas>
+                            </div>
+
+                            <!-- User Found View -->
+                            <div id="user-found-view" class="hidden text-center py-8">
+                                <div
+                                    class="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500 animate-bounce">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                        <polyline points="22 4 12 14.01 9 11.01" />
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">User Found</h2>
+                                <p id="user-name-display" class="text-xl text-indigo-500 font-bold mb-1"></p>
+                                <p id="user-id-display" class="text-gray-500 dark:text-gray-400 mb-8"></p>
+
+                                <button id="start-face-verification-btn" onclick="startFaceVerification()"
+                                    class="w-full btn-premium py-3 rounded-xl font-bold shadow-lg mb-4">
+                                    Start Face Verification
+                                </button>
+                                <button id="scan-another-btn" onclick="resetToQRScan()"
+                                    class="w-full py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+                                    Scan Another QR Code
+                                </button>
+                            </div>
+
+                            <!-- User Not Found View -->
+                            <div id="user-not-found-view" class="hidden text-center py-8">
+                                <div
+                                    class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500 animate-pulse">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <line x1="12" y1="8" x2="12" y2="12" />
+                                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">User Not Found</h2>
+                                <p class="text-gray-500 dark:text-gray-400 mb-8">This QR code is not registered in the
+                                    system.</p>
+
+                                <button onclick="showPage('enrollment-page')"
+                                    class="w-full btn-premium py-3 rounded-xl font-bold shadow-lg mb-4">
+                                    Go to Enrollment Page
+                                </button>
+                                <button onclick="resetToQRScan()"
+                                    class="w-full py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+                                    Scan Again
+                                </button>
+                            </div>
+
+                            <!-- Face Verification View -->
+                            <div id="face-verification-view" class="hidden">
+                                <div class="relative rounded-2xl overflow-hidden bg-black aspect-square shadow-lg mb-6">
+                                    <video id="face-verification-video" autoplay muted playsinline
+                                        class="w-full h-full object-cover"></video>
+                                    <div
+                                        class="absolute inset-0 border-2 border-indigo-500/50 rounded-2xl animate-pulse">
+                                    </div>
+                                </div>
+                                <div id="face-verification-status"
+                                    class="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center text-blue-600 dark:text-blue-400 font-medium mb-4">
+                                    Please look at the camera...
+                                </div>
+                                <button id="cancel-verification-btn" onclick="cancelFaceVerification()"
+                                    class="w-full py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+                                    Cancel
+                                </button>
+                            </div>
+
+                            <!-- Success View -->
+                            <div id="attendance-success-view" class="hidden text-center py-8">
+                                <div
+                                    class="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500 animate-bounce">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                </div>
+                                <h2 class="text-3xl font-bold text-green-500 mb-2">Attendance Marked!</h2>
+                                <p id="success-user-name" class="text-xl text-gray-900 dark:text-white font-bold mb-2">
+                                </p>
+                                <p id="success-timestamp" class="text-gray-500 dark:text-gray-400 mb-8"></p>
+
+                                <button onclick="resetToQRScan()"
+                                    class="w-full btn-premium py-3 rounded-xl font-bold shadow-lg">
+                                    Mark Another Attendance
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page: Events -->
+                <div id="events-page" class="page-content">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-3xl font-bold">Events</h1>
+                        <button id="create-event-btn"
+                            class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-all shadow-lg">
+                            Create Event
+                        </button>
+                    </div>
+
+                    <div id="events-list" class="space-y-4">
+                        <!-- Events will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Event Form Modal -->
+                <div id="event-form-modal"
+                    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 id="event-form-title" class="text-2xl font-bold text-gray-900 dark:text-white">
+                                Create
+                                Event</h2>
+                            <button id="close-event-modal-btn"
+                                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <form id="event-form" class="space-y-4">
+                            <div>
+                                <label for="event-name"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event
+                                    Name</label>
+                                <input type="text" id="event-name" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100"
+                                    placeholder="e.g., Morning Class">
+                            </div>
+
+                            <div>
+                                <label for="event-date"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event
+                                    Date</label>
+                                <input type="date" id="event-date" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="time-in-start"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time
+                                        In
+                                        Start</label>
+                                    <input type="time" id="time-in-start" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100">
+                                </div>
+                                <div>
+                                    <label for="time-in-end"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time
+                                        In
+                                        End</label>
+                                    <input type="time" id="time-in-end" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="time-out-start"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time
+                                        Out
+                                        Start</label>
+                                    <input type="time" id="time-out-start" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100">
+                                </div>
+                                <div>
+                                    <label for="time-out-end"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time
+                                        Out
+                                        End</label>
+                                    <input type="time" id="time-out-end" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100">
+                                </div>
+                            </div>
+
+                            <div class="flex items-center">
+                                <input type="checkbox" id="event-is-active" checked
+                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                <label for="event-is-active"
+                                    class="ml-2 text-sm text-gray-700 dark:text-gray-300">Active</label>
+                            </div>
+
+                            <div class="flex gap-2 pt-4">
+                                <button type="submit" id="event-form-submit-btn"
+                                    class="flex-1 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-all">
+                                    Create Event
+                                </button>
+                                <button type="button" id="close-event-modal-btn-2"
+                                    class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Page: Reports -->
+                <div id="reports-page" class="page-content">
+                    <h1 class="text-3xl font-bold mb-6">Attendance Report</h1>
+
+                    <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <label for="reports-event-select"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter
+                                    by
+                                    Event</label>
+                                <select id="reports-event-select"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100">
+                                    <option value="">All Events</option>
+                                </select>
+                            </div>
+                            <div id="reports-date-container">
+                                <label for="reports-date-input"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select
+                                    Date</label>
+                                <input type="date" id="reports-date-input"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100" />
+                            </div>
+                            <div class="flex items-end gap-2">
+                                <button id="clear-reports-filters"
+                                    class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all">Clear
+                                    Filters</button>
+                                <button id="download-report-btn"
+                                    class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-all">Download
+                                    CSV</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+                        <table class="min-w-full">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="py-3 px-4 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none"
+                                        data-sort="fullName">
+                                        <div class="flex items-center gap-2">
+                                            <span>Full Name</span>
+                                            <span class="sort-indicator" data-column="fullName"></span>
+                                        </div>
+                                    </th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none"
+                                        data-sort="userId">
+                                        <div class="flex items-center gap-2">
+                                            <span>ID Number</span>
+                                            <span class="sort-indicator" data-column="userId"></span>
+                                        </div>
+                                    </th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none"
+                                        data-sort="role">
+                                        <div class="flex items-center gap-2">
+                                            <span>Role</span>
+                                            <span class="sort-indicator" data-column="role"></span>
+                                        </div>
+                                    </th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none"
+                                        data-sort="eventName">
+                                        <div class="flex items-center gap-2">
+                                            <span>Event</span>
+                                            <span class="sort-indicator" data-column="eventName"></span>
+                                        </div>
+                                    </th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none"
+                                        data-sort="attendanceType">
+                                        <div class="flex items-center gap-2">
+                                            <span>Type</span>
+                                            <span class="sort-indicator" data-column="attendanceType"></span>
+                                        </div>
+                                    </th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none"
+                                        data-sort="status">
+                                        <div class="flex items-center gap-2">
+                                            <span>Status</span>
+                                            <span class="sort-indicator" data-column="status"></span>
+                                        </div>
+                                    </th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none"
+                                        data-sort="time">
+                                        <div class="flex items-center gap-2">
+                                            <span>Timestamp</span>
+                                            <span class="sort-indicator" data-column="time"></span>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="reports-table-body" class="divide-y divide-gray-200 dark:divide-gray-600">
+                                <!-- Report rows will be injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+        </main>
+    </div>
+    </div>
+
+    <!-- Utility Canvases (hidden) -->
+    <canvas id="photo-canvas"></canvas>
+    <canvas id="scan-canvas"></canvas>
+
+    <!-- JavaScript Modules -->
+    <!-- Load order matters: storage first, then face-api-loader, then main, then feature modules -->
+    <script src="js/storage.js"></script>
+    <script src="js/face-api-loader.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/enrollment.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/members.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/attendance.js"></script>
+    <script src="js/reports.js"></script>
+</body>
+
+</html>
