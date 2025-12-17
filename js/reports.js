@@ -92,7 +92,6 @@ async function renderReports() {
     } else if (selectedDate) {
         logs = await getAttendanceLogsByDate(selectedDate);
     } else {
-    } else {
         logs = await getAllAttendanceLogs();
     }
 

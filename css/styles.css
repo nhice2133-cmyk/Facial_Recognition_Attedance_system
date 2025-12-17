@@ -50,13 +50,14 @@ html:not(.dark) .glass-panel {
 }
 
 @keyframes slideUpFade {
-    from { 
-        opacity: 0; 
-        transform: translateY(40px) scale(0.98); 
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.98);
     }
-    to { 
-        opacity: 1; 
-        transform: translateY(0) scale(1); 
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 }
 
@@ -218,9 +219,17 @@ video {
     transition: color 0.3s ease;
 }
 
-.stat-icon-indigo { color: #818cf8; }
-.stat-icon-green { color: #4ade80; }
-.stat-icon-red { color: #f87171; }
+.stat-icon-indigo {
+    color: #818cf8;
+}
+
+.stat-icon-green {
+    color: #4ade80;
+}
+
+.stat-icon-red {
+    color: #f87171;
+}
 
 .stat-label {
     font-size: 1rem;
@@ -284,7 +293,8 @@ html:not(.dark) .stat-icon {
 }
 
 /* Hide the utility canvases */
-#photo-canvas, #scan-canvas {
+#photo-canvas,
+#scan-canvas {
     display: none;
 }
 
@@ -299,8 +309,13 @@ html:not(.dark) .stat-icon {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Landing page animations */
@@ -324,14 +339,16 @@ html:not(.dark) .stat-icon {
     justify-content: center;
     width: 1.25rem;
     height: 1.25rem;
-    opacity: 0.3; /* Visible but dimmed by default */
+    opacity: 0.3;
+    /* Visible but dimmed by default */
     transition: all 0.2s;
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.1);
 }
 
 .sort-indicator::before {
-    content: '↕'; /* Default sortable icon */
+    content: '↕';
+    /* Default sortable icon */
     font-size: 0.8rem;
 }
 
